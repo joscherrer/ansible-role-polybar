@@ -1,0 +1,50 @@
+---
+# tasks file for ansible-role-polybar
+
+- include_tasks: 
+    file: "{{ ansible_os_family }}.yml"
+    apply:
+      tags: prereq
+  tags: always
+
+- name: Getting latest polybar version
+  shell: git ls-remote --tags https://github.com/polybar/polybar.git | sed 's/.*\///' | egrep "^[0-9]*\.[0-9]*(\.[0-9]*)?$" | sort | tail -n1
+  register: polybar_git
+  changed_when: false
+
+- name: Checking if polybar is installed
+  stat:
+    path: /usr/bin/polybar
+  register: polybar_installed
+
+### TODO ###
+- name: Getting current polybar version
+  shell: /usr/bin/polybar --version | egrep
+  when: polybar_installed.stat.exists
+  register: polybar_local
+  changed_when: false
+
+- name: Set forced version
+  set_fact:
+    polybar_git_version: "{{ polybar_install_version }}"
+  when: polybar_force_install | bool
+
+- name: Set latest polybar version
+  set_fact:
+    polybar_git_version: "{{ polybar_git.stdout }}"
+  when: not polybar_force_install
+
+- name: Set local polybar version
+  set_fact:
+    polybar_local_version: "{{ polybar_local.stdout }}"
+  when: polybar_installed.stat.exists
+
+- include_tasks: uninstall.yml
+  when: 
+    - polybar_installed.stat.exists 
+    - (polybar_git_version != polybar_local_version) or polybar_force_install
+
+- include_tasks: install.yml
+  when: not polybar_installed.stat.exists or 
+        polybar_force_install or 
+        (polybar_git_version != polybar_local_version)

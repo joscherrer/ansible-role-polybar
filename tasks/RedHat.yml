@@ -1,0 +1,64 @@
+- name: Installing dependencies
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - cmake3
+    - clang
+    - cairo
+    - libxcb-devel
+    - python
+    - pkgconfig
+    - xcb-proto
+    - xcb-util-devel
+    - xcb-util-image-devel
+    - xcb-util-wm-devel
+
+- name: Installing optional dependencies
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    # - xcb-util-xrm-devel
+    - xcb-util-cursor-devel
+    - alsa-lib-devel
+    - pulseaudio-libs-devel
+    - jsoncpp-devel
+    # - libmpdclient-devel
+    - libcurl-devel
+
+- name: Installing meson to build libmpdclient
+  become: yes
+  package: 
+    name: meson
+    state: latest
+
+- name: Installing unzip
+  become: yes
+  package:
+    name: unzip
+    state: latest
+
+- name: Moving /usr/bin/cmake version 2
+  become: yes
+  shell: if cmake --version | egrep -o "2.*" > /dev/null; then mv /usr/bin/cmake /usr/bin/cmake2; fi
+  changed_when: false
+
+- name: Linking cmake3 > cmake
+  become: yes
+  file:
+    src: /usr/bin/cmake3
+    dest: /usr/bin/cmake
+    state: link
+
+- name: Install libmpdclient 2.7
+  become: yes
+  yum:
+    name: http://li.nux.ro/download/nux/dextop/el7/x86_64//libmpdclient-2.7-4.el7.nux.x86_64.rpm
+    state: present
+
+# TODO 
+# Build xcb-util-xrm-devel
+# Build libmpdclient

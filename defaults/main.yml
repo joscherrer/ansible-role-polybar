@@ -1,0 +1,5 @@
+---
+# defaults file for ansible-role-polybar
+
+polybar_force_install: false
+polybar_install_version: "3.4.2"
