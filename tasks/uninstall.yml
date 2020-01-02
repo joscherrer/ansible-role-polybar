@@ -1,0 +1,11 @@
+- name: Uninstalling polybar
+  become: yes
+  make:
+    target: uninstall
+    chdir: "/opt/polybar-{{ polybar_local_version }}/build/"
+
+- name: Removing source folder
+  become: yes
+  file:
+    path: "/opt/polybar-{{ polybar_local_version }}/"
+    state: absent
