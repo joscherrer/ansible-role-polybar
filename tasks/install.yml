@@ -24,6 +24,21 @@
     owner: root
     group: root
     mode: 0755
-  
+
+- name: Cmake polybar
+  shell: cmake ..
+  args:
+    chdir: /opt/polybar-{{ polybar_git_version }}/build/
+
+- name: Make polybar
+  make:
+    chdir: /opt/polybar-{{ polybar_git_version }}/build/ # required. cd into this directory before running make
+    params: -j4 # not required. Any extra parameters to pass to make
+
+- name: Install polybar
+  make: make -j$(nproc)
+    chdir: /opt/polybar-{{ polybar_git_version }}/build/
+    target: install
+
 # sudo unlink /lib64/libstdc++.so.6
 # sudo ln -s /usr/local/lib64/libstdc++.so.6.0.25 /lib64/libstdc++.so.6
