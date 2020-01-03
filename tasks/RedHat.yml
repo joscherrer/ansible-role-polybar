@@ -43,12 +43,6 @@
     # - libmpdclient-devel
     - libcurl-devel
 
-- name: Installing meson to build libmpdclient
-  become: yes
-  package: 
-    name: meson
-    state: latest
-
 - name: Installing unzip
   become: yes
   package:
@@ -67,12 +61,25 @@
     dest: /usr/bin/cmake
     state: link
 
-- name: Install libmpdclient 2.7
+- name: Installing gcc 8.3.0
   become: yes
-  yum:
-    name: http://li.nux.ro/download/nux/dextop/el7/x86_64//libmpdclient-2.7-4.el7.nux.x86_64.rpm
-    state: present
+  unarchive: 
+    src: http://149.202.50.118/kewb-gcc830-CentOS-7-x86_64.tgz
+    dest: /
+    remote_src: yes
+    creates: /usr/local/gcc/8.3.0/
+
+# - name: Installing meson to build libmpdclient
+#   become: yes
+#   package: 
+#     name: meson
+#     state: latest
+
+# - name: Install libmpdclient 2.7
+#   become: yes
+#   yum:
+#     name: http://li.nux.ro/download/nux/dextop/el7/x86_64/libmpdclient-2.7-4.el7.nux.x86_64.rpm
+#     state: present
 
 # TODO 
-# Build xcb-util-xrm-devel
 # Build libmpdclient
