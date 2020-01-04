@@ -23,9 +23,14 @@
 
 - name: Cmake polybar
   become: yes
-  shell: cmake ..
-  args:
+  shell: /usr/bin/cmake ..
+  args: 
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
+  environment:
+    CC: "/usr/local/gcc/8.3.0/bin/gcc"
+    CXX: "/usr/local/gcc/8.3.0/bin/g++"
+    LD_LIBRARY_PATH: "/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64"
+    PATH: "/usr/local/gcc/8.3.0/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$HOME/.local/bin:$HOME/bin"
 
 - name: Make polybar
   become: yes
@@ -33,12 +38,60 @@
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
     params:
       NUM_THREADS: 4
+  environment:
+    CC: "/usr/local/gcc/8.3.0/bin/gcc"
+    CXX: "/usr/local/gcc/8.3.0/bin/g++"
+    LD_LIBRARY_PATH: "/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64"
+    PATH: "/usr/local/gcc/8.3.0/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$HOME/.local/bin:$HOME/bin"
 
 - name: Install polybar
   become: yes
   make:
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
     target: install
+
+- name: Install Rebin
+  become: true
+  copy:
+    content: |
+      #!/bin/bash
+      pathmunge /usr/local/rebin
+    dest: /etc/profile.d/rebin.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Check rebin exists
+  become: true
+  file:
+    path: /usr/local/rebin
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: Install polybar rebinned
+  become: true
+  copy:
+    content: |
+      #!/bin/bash
+      LD_LIBRARY_PATH="/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64" /usr/local/bin/polybar
+    dest: /usr/local/rebin/polybar
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install polybar-msg rebinned
+  become: true
+  copy:
+    content: |
+      #!/bin/bash
+      LD_LIBRARY_PATH="/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64" /usr/local/bin/polybar-msg
+    dest: /usr/local/rebin/polybar-msg
+    owner: root
+    group: root
+    mode: 0755
+
 
 # sudo unlink /lib64/libstdc++.so.6
 # sudo ln -s /usr/local/lib64/libstdc++.so.6.0.25 /lib64/libstdc++.so.6

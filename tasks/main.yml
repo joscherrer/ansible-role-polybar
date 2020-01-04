@@ -17,7 +17,6 @@
     path: /usr/local/bin/polybar
   register: polybar_installed
 
-### TODO ###
 - name: Getting current polybar version
   shell: /usr/local/bin/polybar --version | egrep "^polybar .*$" | sed 's/polybar \(.*\)/\1/'
   when: polybar_installed.stat.exists

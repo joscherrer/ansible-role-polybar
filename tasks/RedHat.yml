@@ -3,15 +3,20 @@
   shell: yum repolist -t -q 2>/dev/null | tail -n +2 | grep -i "epel"
   register: epel_installed
   changed_when: false
-
-- stat:
-    path: /usr/lib64/libxcb-xrm.so
-  register: libxcb
+  failed_when: false
+  args:
+    warn: no
 
 - assert:
-    that: 
-      - epel_installed.rc == 0
-      - libxcb.stat.exists
+    that: epel_installed.rc == 0
+
+- name: Installing xcb-xrm
+  become: yes
+  unarchive:
+    src: http://149.202.50.118/xcb-util-xrm-x86-x64-el7.tgz
+    dest: /
+    remote_src: yes
+    creates: /usr/lib64/libxcb-xrm.so
 
 - name: Installing dependencies
   become: yes
