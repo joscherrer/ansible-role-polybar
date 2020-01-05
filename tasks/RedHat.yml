@@ -10,29 +10,6 @@
 - assert:
     that: epel_installed.rc == 0
 
-- name: Install rebin
-  become: true
-  copy:
-    content: |
-      #!/bin/bash
-      pathmunge /usr/local/rebin
-    dest: /etc/profile.d/rebin.sh
-    owner: root
-    group: root
-    mode: 0755
-
-- name: Reset ssh connection to allow user changes to affect 'current login user'
-  meta: reset_connection
-
-- name: Check rebin exists
-  become: true
-  file:
-    path: /usr/local/rebin
-    owner: root
-    group: root
-    mode: 0755
-    state: directory
-
 - name: Installing dependencies
   become: yes
   package:
@@ -75,7 +52,7 @@
 
 - name: Moving /usr/bin/cmake version 2
   become: yes
-  shell: if cmake --version | egrep -o "2.*" > /dev/null; then mv /usr/bin/cmake /usr/bin/cmake2; fi
+  shell: if cmake --version | egrep -o "version 2.*" > /dev/null; then mv /usr/bin/cmake /usr/bin/cmake2; fi
   changed_when: false
 
 - name: Linking cmake3 > cmake
@@ -93,38 +70,14 @@
     remote_src: yes
     creates: /usr/local/gcc/8.3.0/
 
-- name: Installing meson
+- name: Installing build tools for libmpdclient
   become: yes
   package: 
-    name: meson
+    name: "{{ item }}"
     state: latest
-
-- name: Getting ninja
-  become: yes
-  unarchive:
-    src: https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
-    dest: /usr/local/bin
-    remote_src: yes
-    owner: root
-    group: root
-    mode: 0755
-    creates: /usr/bin/ninja
-
-- name: Install ninja rebinned
-  become: true
-  copy:
-    content: |
-      #!/bin/bash
-      LD_LIBRARY_PATH="/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64" /usr/local/bin/ninja "$@"
-    dest: "/usr/local/rebin/ninja"
-    owner: root
-    group: root
-    mode: 0755
-
-- name: Stat libmpdclient 
-  stat:
-    path: /usr/lib64/libmpdclient.so.2.17
-  register: libmpdclient
+  loop: 
+    - meson
+    - ninja-build
 
 - name: Getting libmpdclient
   become: yes
@@ -145,14 +98,14 @@
 
 - name: ninja build - libmpdclient
   become: yes
-  shell: /usr/local/rebin/ninja -C output
+  shell: ninja-build -C output
   args:
     chdir: /opt/libmpdclient-2.17
     creates: /usr/lib64/libmpdclient.so.2.17
 
 - name: ninja install - libmpdclient
   become: yes
-  shell: /usr/local/rebin/ninja -C output install
+  shell: ninja-build -C output install
   args:
     chdir: /opt/libmpdclient-2.17
     creates: /usr/lib64/libmpdclient.so.2.17

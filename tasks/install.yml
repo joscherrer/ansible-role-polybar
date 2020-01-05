@@ -23,7 +23,7 @@
 
 - name: Cmake polybar
   become: yes
-  shell: /usr/bin/cmake ..
+  shell: /usr/bin/cmake -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,/usr/local/gcc/8.3.0/lib64,-rpath,/usr/local/gcc/8.3.0/lib" ..
   args: 
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
   environment: "{{ gcc_env }}"
@@ -41,20 +41,3 @@
   make:
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
     target: install
-
-- name: Install polybar rebinned
-  become: true
-  copy:
-    content: |
-      #!/bin/bash
-      LD_LIBRARY_PATH="/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64" /usr/local/bin/{{ item }} "$@"
-    dest: "/usr/local/rebin/{{ item }}"
-    owner: root
-    group: root
-    mode: 0755
-  loop:
-    - polybar
-    - polybar-msg
-  when:
-    - ansible_os_family ==  "RedHat"
-    - ansible_distribution != "Fedora"
