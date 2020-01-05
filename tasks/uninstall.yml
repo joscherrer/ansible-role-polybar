@@ -9,3 +9,12 @@
   file:
     path: "/opt/polybar-{{ polybar_local_version }}/"
     state: absent
+
+- name: Removing polybar rebinned
+  become: true
+  file:
+    path: "/usr/local/rebin/{{ item }}"
+    state: absent
+  loop:
+    - polybar
+    - polybar-msg

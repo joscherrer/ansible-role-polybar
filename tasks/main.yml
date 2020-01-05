@@ -1,11 +1,23 @@
 ---
 # tasks file for ansible-role-polybar
 
+- include_vars:
+    file: "{{ ansible_os_family }}.yml"
+  when: ansible_distribution != "Fedora"
+  tags: always
+
+- include_vars:
+    file: "Fedora.yml"
+  when: ansible_distribution == "Fedora"
+  tags: always
+
 - include_tasks: 
     file: "{{ ansible_os_family }}.yml"
-    apply:
-      tags: prereq
-  tags: always
+  when: ansible_distribution != "Fedora"
+
+- include_tasks:
+    file: "Fedora.yml"
+  when: ansible_distribution == "Fedora"
 
 - name: Getting latest polybar version
   shell: git ls-remote --tags https://github.com/polybar/polybar.git | sed 's/.*\///' | egrep "^[0-9]*\.[0-9]*(\.[0-9]*)?$" | sort | tail -n1
@@ -18,7 +30,7 @@
   register: polybar_installed
 
 - name: Getting current polybar version
-  shell: /usr/local/bin/polybar --version | egrep "^polybar .*$" | sed 's/polybar \(.*\)/\1/'
+  shell: /usr/local/rebin/polybar --version | egrep "^polybar .*$" | sed 's/polybar \(.*\)/\1/'
   when: polybar_installed.stat.exists
   register: polybar_local
   changed_when: false

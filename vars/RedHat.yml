@@ -1,0 +1,5 @@
+gcc_env:
+  CC: "/usr/local/gcc/8.3.0/bin/gcc"
+  CXX: "/usr/local/gcc/8.3.0/bin/g++"
+  LD_LIBRARY_PATH: "/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64"
+  PATH: "/usr/local/gcc/8.3.0/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$HOME/.local/bin:$HOME/bin"

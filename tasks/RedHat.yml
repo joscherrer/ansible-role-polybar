@@ -10,13 +10,28 @@
 - assert:
     that: epel_installed.rc == 0
 
-- name: Installing xcb-xrm
-  become: yes
-  unarchive:
-    src: http://149.202.50.118/xcb-util-xrm-x86-x64-el7.tgz
-    dest: /
-    remote_src: yes
-    creates: /usr/lib64/libxcb-xrm.so
+- name: Install rebin
+  become: true
+  copy:
+    content: |
+      #!/bin/bash
+      pathmunge /usr/local/rebin
+    dest: /etc/profile.d/rebin.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+
+- name: Check rebin exists
+  become: true
+  file:
+    path: /usr/local/rebin
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
 
 - name: Installing dependencies
   become: yes
@@ -30,10 +45,12 @@
     - libxcb-devel
     - python
     - pkgconfig
+    - unzip
     - xcb-proto
     - xcb-util-devel
     - xcb-util-image-devel
     - xcb-util-wm-devel
+  tags: prereq
 
 - name: Installing optional dependencies
   become: yes
@@ -45,14 +62,16 @@
     - alsa-lib-devel
     - pulseaudio-libs-devel
     - jsoncpp-devel
-    # - libmpdclient-devel
     - libcurl-devel
+  tags: prereq
 
-- name: Installing unzip
+- name: Installing xcb-xrm
   become: yes
-  package:
-    name: unzip
-    state: latest
+  unarchive:
+    src: http://149.202.50.118/xcb-util-xrm-x86-x64-el7.tgz
+    dest: /
+    remote_src: yes
+    creates: /usr/lib64/libxcb-xrm.so
 
 - name: Moving /usr/bin/cmake version 2
   become: yes
@@ -74,17 +93,66 @@
     remote_src: yes
     creates: /usr/local/gcc/8.3.0/
 
-# - name: Installing meson to build libmpdclient
-#   become: yes
-#   package: 
-#     name: meson
-#     state: latest
+- name: Installing meson
+  become: yes
+  package: 
+    name: meson
+    state: latest
 
-# - name: Install libmpdclient 2.7
-#   become: yes
-#   yum:
-#     name: http://li.nux.ro/download/nux/dextop/el7/x86_64/libmpdclient-2.7-4.el7.nux.x86_64.rpm
-#     state: present
+- name: Getting ninja
+  become: yes
+  unarchive:
+    src: https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
+    dest: /usr/local/bin
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+    creates: /usr/bin/ninja
 
-# TODO 
-# Build libmpdclient
+- name: Install ninja rebinned
+  become: true
+  copy:
+    content: |
+      #!/bin/bash
+      LD_LIBRARY_PATH="/usr/local/gcc/8.3.0/lib:/usr/local/gcc/8.3.0/lib64:/lib:/lib64" /usr/local/bin/ninja "$@"
+    dest: "/usr/local/rebin/ninja"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Stat libmpdclient 
+  stat:
+    path: /usr/lib64/libmpdclient.so.2.17
+  register: libmpdclient
+
+- name: Getting libmpdclient
+  become: yes
+  unarchive:
+    src: https://github.com/MusicPlayerDaemon/libmpdclient/archive/v2.17.zip
+    dest: /opt
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Meson output - libmpdclient
+  become: yes
+  shell: meson . output --prefix=/usr
+  args:
+    chdir: /opt/libmpdclient-2.17
+    creates: /usr/lib64/libmpdclient.so.2.17
+
+- name: ninja build - libmpdclient
+  become: yes
+  shell: /usr/local/rebin/ninja -C output
+  args:
+    chdir: /opt/libmpdclient-2.17
+    creates: /usr/lib64/libmpdclient.so.2.17
+
+- name: ninja install - libmpdclient
+  become: yes
+  shell: /usr/local/rebin/ninja -C output install
+  args:
+    chdir: /opt/libmpdclient-2.17
+    creates: /usr/lib64/libmpdclient.so.2.17
