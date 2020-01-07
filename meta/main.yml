@@ -1,4 +1,5 @@
 galaxy_info:
+  role_name: polybar
   author: Jonathan Scherrer
   description: Installs polybar from source
   license: MIT
