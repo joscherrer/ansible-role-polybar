@@ -10,7 +10,7 @@
   unarchive:
     src: https://github.com/polybar/polybar/releases/download/{{ polybar_git_version }}/polybar-{{ polybar_git_version }}.tar
     dest: /opt/polybar-{{ polybar_git_version }}/
-    extra_opts: 
+    extra_opts:
       - --strip-components=1
     remote_src: yes
 
@@ -23,8 +23,9 @@
 
 - name: Cmake polybar
   become: yes
-  shell: /usr/bin/cmake -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,/usr/local/gcc/8.3.0/lib64,-rpath,/usr/local/gcc/8.3.0/lib" ..
-  args: 
+  command: /usr/bin/cmake -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,/usr/local/gcc/8.3.0/lib64,-rpath,/usr/local/gcc/8.3.0/lib" ..
+  changed_when: false
+  args:
     chdir: /opt/polybar-{{ polybar_git_version }}/build/
   environment: "{{ gcc_env }}"
 

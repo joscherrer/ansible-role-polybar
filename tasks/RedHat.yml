@@ -1,20 +1,23 @@
 - name: Checking EPEL is enabled
   become: yes
-  shell: yum repolist -t -q 2>/dev/null | tail -n +2 | grep -i "epel"
+  shell: |
+    set -o pipefail
+    yum repolist -t -q 2>/dev/null | tail -n +2 | grep -i "epel"
   register: epel_installed
   changed_when: false
   failed_when: false
   args:
     warn: no
 
-- assert:
+- name: Assert that EPEL is installed
+  assert:
     that: epel_installed.rc == 0
 
 - name: Installing dependencies
   become: yes
   package:
     name: "{{ item }}"
-    state: latest
+    state: present
   loop:
     - cmake3
     - clang
@@ -33,7 +36,7 @@
   become: yes
   package:
     name: "{{ item }}"
-    state: latest
+    state: present
   loop:
     - xcb-util-cursor-devel
     - alsa-lib-devel
@@ -52,7 +55,9 @@
 
 - name: Moving /usr/bin/cmake version 2
   become: yes
-  shell: if cmake --version | egrep -o "version 2.*" > /dev/null; then mv /usr/bin/cmake /usr/bin/cmake2; fi
+  shell: |
+    set -o pipefail
+    if cmake --version | egrep -o "version 2.*" > /dev/null; then mv /usr/bin/cmake /usr/bin/cmake2; fi
   changed_when: false
 
 - name: Linking cmake3 > cmake
@@ -64,7 +69,7 @@
 
 - name: Installing gcc 8.3.0
   become: yes
-  unarchive: 
+  unarchive:
     src: http://149.202.50.118/kewb-gcc830-CentOS-7-x86_64.tgz
     dest: /
     remote_src: yes
@@ -72,10 +77,10 @@
 
 - name: Installing build tools for libmpdclient
   become: yes
-  package: 
+  package:
     name: "{{ item }}"
-    state: latest
-  loop: 
+    state: present
+  loop:
     - meson
     - ninja-build
 
@@ -91,21 +96,21 @@
 
 - name: Meson output - libmpdclient
   become: yes
-  shell: meson . output --prefix=/usr
+  command: meson . output --prefix=/usr
   args:
     chdir: /opt/libmpdclient-2.17
     creates: /usr/lib64/libmpdclient.so.2.17
 
 - name: ninja build - libmpdclient
   become: yes
-  shell: ninja-build -C output
+  command: ninja-build -C output
   args:
     chdir: /opt/libmpdclient-2.17
     creates: /usr/lib64/libmpdclient.so.2.17
 
 - name: ninja install - libmpdclient
   become: yes
-  shell: ninja-build -C output install
+  command: ninja-build -C output install
   args:
     chdir: /opt/libmpdclient-2.17
     creates: /usr/lib64/libmpdclient.so.2.17
