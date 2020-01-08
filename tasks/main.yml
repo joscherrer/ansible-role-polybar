@@ -36,7 +36,7 @@
 - name: Getting current polybar version
   shell: |
     set -o pipefail
-    /usr/local/rebin/polybar --version | egrep "^polybar .*$" | sed 's/polybar \(.*\)/\1/'
+    /usr/local/bin/polybar --version | egrep "^polybar .*$" | sed 's/polybar \(.*\)/\1/'
   when: polybar_installed.stat.exists
   register: polybar_local
   changed_when: false
